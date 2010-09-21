@@ -1,0 +1,65 @@
+#!/usr/bin/env ruby 
+
+class LiarLiar
+
+  def self.partition_sizes(graph)
+    n = graph.length
+    current_level = []
+    next_level = []
+    grp_a = []
+    grp_b = []
+    visited = {}
+    current_level << graph.keys[0]
+    visited[current_level[0]] = true
+    done = false
+    a = true
+    while(grp_a.length + grp_b.length < n)
+      next_level = []
+      current_level.each {|p|
+        a ? grp_a << p : grp_b << p
+        graph[p].each_key{|k|
+          next_level << k unless visited[k]
+          visited[k] = true
+        }
+        visited[p] = true
+      }
+      current_level = next_level
+      a = !a
+    end
+    [grp_a.length, grp_b.length]
+  end
+  
+  def self.graph_for(filename)
+    
+    graph = {}    
+    input = File.open(filename)
+    n = input.gets.to_i
+    
+    n.times { |n|
+      accuser = input.gets.split
+      accuser_name = accuser[0]
+      num_accusations = accuser[1]
+      graph[accuser_name] = {} unless graph[accuser_name]
+      accused = graph[accuser_name]
+      num_accusations.to_i.times{|m|
+        accusee = input.gets.strip
+        accused[accusee] = true
+        if (graph[accusee])
+          graph[accusee][accuser_name] = true
+        else
+          graph[accusee] = {accuser_name => true}
+        end
+      }
+    }
+    graph
+  end
+end
+
+unless ARGV[0] && File.exist?(ARGV[0])
+  puts "error: must specify a valid input file"
+  exit
+end
+
+s = LiarLiar.partition_sizes(LiarLiar.graph_for ARGV[0])
+puts "#{s.max} #{s.min}\n"
+exit
